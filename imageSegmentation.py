@@ -3,13 +3,16 @@
 import cv2
 import numpy as np
 import tkinter as tk
-from tkinter import filedialog, Button, Label
+from tkinter import filedialog, messagebox, Button, Label
 
 def select_image():
     filepath = filedialog.askopenfilename()
     if not filepath:
         return
     image = cv2.imread(filepath)
+    if image is None:
+        messagebox.showerror("Error", "Could not read that file as an image.")
+        return
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     segment_image(image)
 
@@ -23,7 +26,7 @@ def segment_image(image):
     dist_transform = cv2.distanceTransform(opening, cv2.DIST_L2, 5)
     _, sure_fg = cv2.threshold(dist_transform, 0.7 * dist_transform.max(), 255, 0)
     sure_fg = np.uint8(sure_fg)
-    unknown = cv2.subtract(sure_fg, sure_bg)
+    unknown = cv2.subtract(sure_bg, sure_fg)
     ret, markers = cv2.connectedComponents(sure_fg)
     markers = markers + 1
     markers[unknown == 255] = 0
